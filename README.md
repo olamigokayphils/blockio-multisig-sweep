@@ -24,5 +24,5 @@ Create your `.env` file in the root directory using the `.env.example` format.
 - DERIVATION_PATH is the derivation path shown when you back up your private keys
 
 ```
-$ node index.js
+$ cd src && node index.js
 ```

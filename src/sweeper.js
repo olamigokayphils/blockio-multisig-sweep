@@ -41,7 +41,6 @@ BlockIoSweep.DEFAULT_MAX_TX_INPUTS = constants.MAX_TX_INPUTS;
 
 BlockIoSweep.prototype.begin = async function () {
   // the user calls this to begin sweep of addresses
-  console.log({ input });
   // we look for the first N paths' addresses,
   // we retrieve the unspent outputs for the addresses
   // we construct transaction(s) and sign them

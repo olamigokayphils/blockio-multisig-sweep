@@ -12,7 +12,6 @@
 ```
 $ git clone <repository URL>
 $ cd <dir> && npm install
-
 ```
 
 Create your `.env` file in the root directory using the `.env.example` format.

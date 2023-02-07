@@ -96,7 +96,7 @@ ProviderService.prototype.sendTx = async function (txHex) {
       }
 
       case constants.PROVIDERS.BLOCKCHAINCOM: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER, "txs", "push"].join("/");
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, "txs", "push"].join("/");
         await broadcastTx(apiUrl, txHex);
         return;
       }

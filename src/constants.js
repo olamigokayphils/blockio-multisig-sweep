@@ -25,8 +25,8 @@ module.exports = {
       SUPPORT: ["BTC"],
     },
     BLOCKCYPHER: {
-      URL: "https://api.blockcypher.com/v1/btc/main",
-      SUPPORT: ["BTC"],
+      URL: "https://api.blockcypher.com/v1",
+      SUPPORT: ["BTC", "LTC"],
     },
     SOCHAIN: {
       URL: "https://sochain.com/api/v2",

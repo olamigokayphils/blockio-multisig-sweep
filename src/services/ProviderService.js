@@ -96,7 +96,7 @@ ProviderService.prototype.sendTx = async function (txHex) {
       }
 
       case constants.PROVIDERS.BLOCKCHAINCOM: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, "txs", "push"].join("/");
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network, "main", "txs", "push"].join("/");
         await broadcastTx(apiUrl, txHex);
         return;
       }
@@ -129,7 +129,7 @@ async function fetchUrl(url) {
 async function broadcastTx(apiUrl, txHex) {
   try {
     let res;
-    if (apiUrl == [constants.PROVIDER_URLS.BLOCKCYPHER, "txs", "push"].join("/")) {
+    if (apiUrl == [constants.PROVIDER_URLS.BLOCKCYPHER, this.network, "main", "txs", "push"].join("/")) {
       res = await fetch(apiUrl, {
         method: "POST",
         body: JSON.stringify({ tx: txHex }),

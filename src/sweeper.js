@@ -24,14 +24,16 @@ function BlockIoSweep(network, bip32_private_key_1, private_key_2, destination_a
     this.provider = options.provider || BlockIoSweep.DEFAULT_BLOCKCHAIN_PROVIDER;
     this.feeRate = options.feeRate || BlockIoSweep.DEFAULT_FEE_RATE[network];
     this.maxTxInputs = options.maxTxInputs || BlockIoSweep.DEFAULT_MAX_TX_INPUTS;
+    this.apiKey = options?.key;
   } else if (network == constants.NETWORKS.BTC) {
     this.provider = BlockIoSweep.DEFAULT_BLOCKCHAIN_PROVIDER;
     this.feeRate = BlockIoSweep.DEFAULT_FEE_RATE[network];
     this.maxTxInputs = BlockIoSweep.DEFAULT_MAX_TX_INPUTS;
+    this.apiKey = null;
   } else {
     throw Error(`option must be set for ${network} network i.e new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath, option);`);
   }
-  this.providerService = new ProviderService(this.provider, this.network);
+  this.providerService = new ProviderService(this.provider, this.network, this.apiKey);
 }
 
 // set defaults from constants

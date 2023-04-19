@@ -2,7 +2,7 @@ const constants = require("../constants");
 const fetch = require("node-fetch");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const ProviderService = function (provider, network) {
+const ProviderService = function (provider, network, apiKey = null) {
   const providerIndex = Object.values(constants.PROVIDERS).indexOf(provider);
   if (providerIndex < 0) {
     throw new Error("Blockchain provider not supported");
@@ -13,6 +13,7 @@ const ProviderService = function (provider, network) {
   }
   this.network = network;
   this.provider = provider;
+  this.apiKey = apiKey;
 };
 
 ProviderService.prototype.getTxHex = async function (txId) {
@@ -48,7 +49,7 @@ ProviderService.prototype.getTxHex = async function (txId) {
       }
 
       case constants.PROVIDERS.BLOCKCYPHER: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main/txs", txId, "?includeHex=true"].join("/");
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main/txs", txId, `?includeHex=true&token=${this.apiKey}`].join("/");
         const res = await fetchUrl(apiUrl);
         const json = await res.json();
         if (!json.hex) {
@@ -88,7 +89,9 @@ ProviderService.prototype.getUtxo = async function (addr) {
         return json.unspent_outputs;
       }
       case constants.PROVIDERS.BLOCKCYPHER: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main/addrs", addr + "?unspentOnly=true&includeScript=true"].join("/");
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main/addrs", addr + `?unspentOnly=true&includeScript=true&token=${this.apiKey}`].join(
+          "/"
+        );
         const res = await fetchUrl(apiUrl);
         const json = await res.json();
         if (json.error) {
@@ -116,8 +119,8 @@ ProviderService.prototype.sendTx = async function (txHex) {
 
       case constants.PROVIDERS.BLOCKCHAINCOM:
       case constants.PROVIDERS.BLOCKCYPHER: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main", "txs", "push"].join("/");
-        await broadcastTx(apiUrl, this.network.toLowerCase(), txHex);
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main", "txs", `push?token=${this.apiKey}`].join("/");
+        await broadcastTx(apiUrl, this.network.toLowerCase(), txHex, this.apiKey);
         return;
       }
       default: {
@@ -146,10 +149,10 @@ async function fetchUrl(url) {
   }
 }
 
-async function broadcastTx(apiUrl, network, txHex) {
+async function broadcastTx(apiUrl, network, txHex, apiKey = null) {
   try {
     let res;
-    if (apiUrl == [constants.PROVIDER_URLS.BLOCKCYPHER.URL, network, "main", "txs", "push"].join("/")) {
+    if (apiUrl == [constants.PROVIDER_URLS.BLOCKCYPHER.URL, network, "main", "txs", `push?token=${apiKey}`].join("/")) {
       res = await fetch(apiUrl, {
         method: "POST",
         body: JSON.stringify({ tx: txHex }),

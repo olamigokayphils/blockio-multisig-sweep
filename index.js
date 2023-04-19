@@ -11,6 +11,7 @@ const derivationPath = process.env.DERIVATION_PATH;
 
 console.log({ n });
 
+/** CHECK ENVIRONMENT VARIABLES */
 if (!n || !bip32 || !privkey2 || !toAddr || !network || !derivationPath) {
   console.log("One or more required arguments are missing");
   process.exit(0);
@@ -21,7 +22,12 @@ let sweep;
 if (network == constants.NETWORKS.BTC || network == constants.NETWORKS.BTCTEST) {
   sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath);
 } else {
-  sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath, { provider: constants.PROVIDERS.BLOCKCYPHER });
+  /** ASSERTS THAT BLOCKCYPHER API KEY/TOKEN IS AVAILABLE */
+  if (!process.env.BLOCKCYPHER_API_KEY) {
+    console.error("Consider adding 'BLOCKCYPHER_API_KEY' to your .env file. visit: https://accounts.blockcypher.com/signup");
+    process.exit(0);
+  }
+  sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath, { provider: constants.PROVIDERS.BLOCKCYPHER, key: process.env.BLOCKCYPHER_API_KEY });
 }
 
 Sweep();

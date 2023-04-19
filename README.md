@@ -22,6 +22,7 @@ Create your `.env` file in the root directory using the `.env.example` format.
 - DESTINATION_ADDR is where you want the swept coins to go
 - NETWORK is the network for which you're sweeping coins
 - DERIVATION_PATH is the derivation path shown when you back up your private keys
+- [BLOCKCYPHER_API_KEY](https://accounts.blockcypher.com/signup) (optional) - is an authentication token required for non-BTC blockchain exploration.
 
 ```
 $ node index.js

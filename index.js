@@ -1,3 +1,4 @@
+const constants = require("./src/constants");
 const Sweeper = require("./src/sweeper");
 
 require("dotenv").config({ debug: true });
@@ -15,7 +16,13 @@ if (!n || !bip32 || !privkey2 || !toAddr || !network || !derivationPath) {
   process.exit(0);
 }
 
-const sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath);
+let sweep;
+
+if (network == constants.NETWORKS.BTC || network == constants.NETWORKS.BTCTEST) {
+  sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath);
+} else {
+  sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath, { provider: constants.PROVIDERS.BLOCKCYPHER });
+}
 
 Sweep();
 

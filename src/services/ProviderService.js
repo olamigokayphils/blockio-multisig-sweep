@@ -47,6 +47,16 @@ ProviderService.prototype.getTxHex = async function (txId) {
         return hex;
       }
 
+      case constants.PROVIDERS.BLOCKCYPHER: {
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main/txs", txId, "?includeHex=true"].join("/");
+        const res = await fetchUrl(apiUrl);
+        const json = await res.json();
+        if (!json.hex) {
+          throw new Error(`Error obtaing hex from ${this.provider} server`);
+        }
+        return json.hex;
+      }
+
       default: {
         throw new Error("Could not get hex with provider: " + this.provider);
       }
@@ -77,6 +87,15 @@ ProviderService.prototype.getUtxo = async function (addr) {
         }
         return json.unspent_outputs;
       }
+      case constants.PROVIDERS.BLOCKCYPHER: {
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main/addrs", addr + "?unspentOnly=true&includeScript=true"].join("/");
+        const res = await fetchUrl(apiUrl);
+        const json = await res.json();
+        if (json.error) {
+          throw new Error(json.message);
+        }
+        return json.txrefs || [];
+      }
       default: {
         throw new Error("Could not get utxo with provider: " + this.provider);
       }
@@ -91,13 +110,14 @@ ProviderService.prototype.sendTx = async function (txHex) {
     switch (this.provider) {
       case constants.PROVIDERS.SOCHAIN: {
         const apiUrl = [constants.PROVIDER_URLS.SOCHAIN.URL, "send_tx", this.network].join("/");
-        await broadcastTx(apiUrl, txHex);
+        await broadcastTx(apiUrl, this.network.toLowerCase(), txHex);
         return;
       }
 
-      case constants.PROVIDERS.BLOCKCHAINCOM: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network, "main", "txs", "push"].join("/");
-        await broadcastTx(apiUrl, txHex);
+      case constants.PROVIDERS.BLOCKCHAINCOM:
+      case constants.PROVIDERS.BLOCKCYPHER: {
+        const apiUrl = [constants.PROVIDER_URLS.BLOCKCYPHER.URL, this.network.toLowerCase(), "main", "txs", "push"].join("/");
+        await broadcastTx(apiUrl, this.network.toLowerCase(), txHex);
         return;
       }
       default: {
@@ -126,16 +146,17 @@ async function fetchUrl(url) {
   }
 }
 
-async function broadcastTx(apiUrl, txHex) {
+async function broadcastTx(apiUrl, network, txHex) {
   try {
     let res;
-    if (apiUrl == [constants.PROVIDER_URLS.BLOCKCYPHER, this.network, "main", "txs", "push"].join("/")) {
+    if (apiUrl == [constants.PROVIDER_URLS.BLOCKCYPHER.URL, network, "main", "txs", "push"].join("/")) {
       res = await fetch(apiUrl, {
         method: "POST",
         body: JSON.stringify({ tx: txHex }),
         headers: { "Content-Type": "application/json" },
       });
       res = await res.json();
+      console.log(res);
     } else {
       res = await fetch(apiUrl, {
         method: "POST",
@@ -144,9 +165,9 @@ async function broadcastTx(apiUrl, txHex) {
       });
       res = await res.json();
     }
-    if (res.status === "success") {
+    if (res.status === "success" || res.tx?.received) {
       console.log("Sweep Success!");
-      console.log("Tx_id:", res.data.txid);
+      console.log("Tx_id:", res.data.txid || res.tx?.hash);
     } else {
       console.log("Sweep Failed:");
       throw new Error(JSON.stringify(res.data));

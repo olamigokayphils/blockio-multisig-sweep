@@ -24,10 +24,12 @@ function BlockIoSweep(network, bip32_private_key_1, private_key_2, destination_a
     this.provider = options.provider || BlockIoSweep.DEFAULT_BLOCKCHAIN_PROVIDER;
     this.feeRate = options.feeRate || BlockIoSweep.DEFAULT_FEE_RATE[network];
     this.maxTxInputs = options.maxTxInputs || BlockIoSweep.DEFAULT_MAX_TX_INPUTS;
-  } else {
+  } else if (network == constants.NETWORKS.BTC) {
     this.provider = BlockIoSweep.DEFAULT_BLOCKCHAIN_PROVIDER;
     this.feeRate = BlockIoSweep.DEFAULT_FEE_RATE[network];
     this.maxTxInputs = BlockIoSweep.DEFAULT_MAX_TX_INPUTS;
+  } else {
+    throw Error(`option must be set for ${network} network i.e new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath, option);`);
   }
   this.providerService = new ProviderService(this.provider, this.network);
 }
@@ -294,7 +296,7 @@ async function addAddrToMap(balanceMap, addrType, i, bip32Priv, pubKey, networkO
 
     for (x of addrUtxo) {
       const unspentObj = {};
-      unspentObj.hash = x.tx_hash_big_endian;
+      unspentObj.hash = x.tx_hash_big_endian || x.tx_hash;
       unspentObj.index = x.tx_output_n;
       unspentObj.value = x.value;
 
@@ -339,7 +341,7 @@ async function addAddrToMap(balanceMap, addrType, i, bip32Priv, pubKey, networkO
           break;
 
         case constants.P2SH: // Legacy P2SH
-          unspentObj.nonWitnessUtxo = Buffer.from(await providerService.getTxHex(x.txid), "hex");
+          unspentObj.nonWitnessUtxo = Buffer.from(await providerService.getTxHex(x.txid || x.hash), "hex");
           unspentObj.redeemScript = payment.redeem.output;
           break;
       }

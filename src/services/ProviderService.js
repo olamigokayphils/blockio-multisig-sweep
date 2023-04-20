@@ -170,7 +170,7 @@ async function broadcastTx(apiUrl, network, txHex, apiKey = null) {
     }
     if (res.status === "success" || res.tx?.received) {
       console.log("Sweep Success!");
-      console.log("Tx_id:", res.data.txid || res.tx?.hash);
+      console.log("Tx_id:", res.data?.txid || res.tx?.hash);
     } else {
       console.log("Sweep Failed:");
       throw new Error(JSON.stringify(res.data));

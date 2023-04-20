@@ -10,6 +10,21 @@ const ecc = require("tiny-secp256k1");
 var fs = require("fs");
 const path = require("path");
 
+/** PREPARE BOOK KEEPING */
+const jsonPath = path.join(__dirname, "..", "addresses.json");
+try {
+  fs.unlinkSync(jsonPath);
+} catch (err) {
+  if (err.code !== "ENOENT") {
+    throw err;
+  }
+}
+let initialstring = JSON.stringify({
+  table: [],
+});
+fs.writeFile(jsonPath, initialstring, "utf8", () => console.log());
+/**  */
+
 function BlockIoSweep(network, bip32_private_key_1, private_key_2, destination_address, n, derivation_path, options) {
   // TODO perform error checking on all these inputs
   this.network = network;
@@ -110,7 +125,7 @@ BlockIoSweep.prototype.begin = async function () {
 
       for (let i = 0; i < utxoMap[address].tx.length; i++) {
         const utxo = utxoMap[address].tx[i];
-        balToSweep += getCoinValue(utxo.value);
+        balToSweep += getCoinValue(utxo.value, this.provider);
         delete utxo.value;
         const input = {
           ...utxo,
@@ -231,23 +246,28 @@ function getNetworkFee(network, psbt, feeRate) {
   return f;
 }
 
-function getCoinValue(floatAsString) {
+function getCoinValue(floatAsString, provider) {
   floatAsString = String(floatAsString);
-  const s = floatAsString.split(".");
+  if (provider == constants.PROVIDERS.SOCHAIN) {
+    const s = floatAsString.split(".");
 
-  if (s[1] === undefined) {
-    s[1] = "0";
+    if (s[1] === undefined) {
+      s[1] = "0";
+    }
+
+    const r = parseInt("" + s[0] + s[1] + constants.COIN.substr(1, 8 - s[1].length));
+
+    console.log(`${floatAsString} becomes ${r}`);
+
+    if (r > Number.MAX_SAFE_INTEGER) {
+      throw new Error("Number exceeds MAX_SAFE_INTEGER");
+    }
+
+    return r;
+  } else {
+    // blockcypher & blockchaincom returns value in SATS & LITS - No conversion required
+    return parseInt(floatAsString);
   }
-
-  const r = parseInt("" + s[0] + s[1] + constants.COIN.substr(1, 8 - s[1].length));
-
-  console.log(`${floatAsString} becomes ${r}`);
-
-  if (r > Number.MAX_SAFE_INTEGER) {
-    throw new Error("Number exceeds MAX_SAFE_INTEGER");
-  }
-
-  return parseInt(floatAsString);
 }
 
 async function createBalanceMap(n, bip32Priv, pubKey, networkObj, network, derivationPath, providerService) {
@@ -292,8 +312,6 @@ async function addAddrToMap(balanceMap, addrType, i, bip32Priv, pubKey, networkO
     // get the unspent transactions for the derived address
     const addrUtxo = await providerService.getUtxo(payment.address);
 
-    const jsonPath = path.join(__dirname, "..", "addresses.json");
-
     let x;
 
     for (x of addrUtxo) {
@@ -327,7 +345,7 @@ async function addAddrToMap(balanceMap, addrType, i, bip32Priv, pubKey, networkO
           unspentObj.witnessUtxo = {
             //script: Buffer.from(x.script_hex, "hex"),
             script: Buffer.from(x.script, "hex"),
-            value: getCoinValue(x.value),
+            value: getCoinValue(x.value, providerService.provider),
           };
           unspentObj.redeemScript = payment.redeem.output;
           unspentObj.witnessScript = payment.redeem.redeem.output;
@@ -337,7 +355,7 @@ async function addAddrToMap(balanceMap, addrType, i, bip32Priv, pubKey, networkO
           unspentObj.witnessUtxo = {
             //script: Buffer.from(x.script_hex, "hex"),
             script: Buffer.from(x.script, "hex"),
-            value: getCoinValue(x.value),
+            value: getCoinValue(x.value, providerService.provider),
           };
           unspentObj.witnessScript = payment.redeem.output;
           break;

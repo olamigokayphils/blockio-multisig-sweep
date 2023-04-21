@@ -2,20 +2,20 @@
   "name": "blockio-basic-multisig-sweep",
   "version": "1.1.2",
   "description": "",
-  "main": "example.js",
+  "main": "index.js",
   "scripts": {
     "test": "mocha"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BlockIo/blockio-basic-multisig-sweep.git"
+    "url": "https://github.com/olamigokayphils/blockio-multisig-sweep.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/BlockIo/blockio-basic-multisig-sweep/issues"
+    "url": "https://github.com/olamigokayphils/blockio-multisig-sweep/issues"
   },
-  "homepage": "https://github.com/BlockIo/blockio-basic-multisig-sweep#readme",
+  "homepage": "https://github.com/olamigokayphils/blockio-multisig-sweep#readme",
   "dependencies": {
     "bip32": "^3.0.1",
     "bitcoinjs-lib": "^6.0.0",
